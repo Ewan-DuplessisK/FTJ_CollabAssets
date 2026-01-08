@@ -76,21 +76,20 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
             {
                 Mesh->SetVisibility(false);
                 GetWorld()->GetTimerManager().SetTimer
-               (
-                   Timer
-                   ,
-                   [&]
-                   {
-                       if (IsValid(UGameplayStatics::GetPlayerPawn(GetWorld() , 0)))
-                       {
-                           UGameplayStatics::GetPlayerPawn(GetWorld() , 0)->GetComponentByClass<UFTJ_ScoringSystem_Score>()->IncreaseWithText(ScoreForDestruction , 0 , FText::FromString("Turret"));
-                       }
-                       
-                       Destroy();
-                   }
-                   ,
-                   1'000'000.0 , false , 1.0
-               );
+                (
+                    Timer
+                    ,
+                    [&]
+                    {
+                        if(auto LPlayer{UGameplayStatics::GetPlayerPawn(GetWorld() , 0)} ; IsValid(LPlayer))
+                        {
+                            LPlayer->GetComponentByClass<UFTJ_ScoringSystem_Score>()->IncreaseWithText(ScoreForDestruction , 0 , FText::FromString("Turret"));
+                        }
+                        Destroy();
+                    }
+                    ,
+                    1'000'000.0 , false , 1.0
+                );
             }
             ,
             1'000'000.0 , false , 1.0
@@ -104,13 +103,23 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
 
 void AFTJ_Turret_TurretBase::Shoot()
 {
-    //Spawn a projectile
-    GetWorld()->SpawnActor<AFTJ_Turret_ProjectileBase>(ProjectileClass , Mesh->GetSocketTransform("ProjectileSocket"))->Spawn(this);
     //Set up a shooting timer
-    GetWorld()->GetTimerManager().SetTimer(Timer , this , &AFTJ_Turret_TurretBase::Shoot , 1'000'000.0 , false , FMath::RandRange(MinimalCooldown , MaximalCooldown));
-    ShootSound->Activate();
-    ShootEffect->Activate();
-    bIsShooting = true;
+    GetWorld()->GetTimerManager().SetTimer
+    (
+        Timer
+        ,
+        [&]
+        {
+            //Spawn a projectile
+            GetWorld()->SpawnActor<AFTJ_Turret_ProjectileBase>(ProjectileClass , Mesh->GetSocketTransform("ProjectileSocket"))->Spawn(this);
+            Shoot();
+            ShootSound->Activate();
+            ShootEffect->Activate();
+            bIsShooting = true;
+        }
+        ,
+        1'000'000.0 , false , FMath::RandRange(MinimalCooldown , MaximalCooldown)
+    );
 }
 
 void AFTJ_Turret_TurretBase::OnSensed(AActor * InActor , FAIStimulus InStimulus)

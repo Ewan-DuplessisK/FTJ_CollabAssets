@@ -37,7 +37,7 @@ void APlayer_Controller::SetupInputComponent()
 		return;
 	}
 	EnhancedInputComponent->BindAction(InputAction_Move, ETriggerEvent::Triggered, this, &APlayer_Controller::MovePlayer);
-	EnhancedInputComponent->BindAction(InputAction_Look, ETriggerEvent::Triggered, this, &APlayer_Controller::Look);
+	//EnhancedInputComponent->BindAction(InputAction_Look, ETriggerEvent::Triggered, this, &APlayer_Controller::Look);
 	//EnhancedInputComponent->BindAction(InputAction_Kick,ETriggerEvent::Triggered, this, &APlayer_Controller::OnKickTriggered);
 	EnhancedInputComponent->BindAction(InputAction_Pause, ETriggerEvent::Triggered, this,&APlayer_Controller::PauseGame);
 	
