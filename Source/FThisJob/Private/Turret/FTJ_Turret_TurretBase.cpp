@@ -48,7 +48,7 @@ void AFTJ_Turret_TurretBase::Tick(float InDelta)
     //Convert to the control basis
     auto Space{GetActorTransform().InverseTransformVectorNoScale(Player->GetActorLocation() - Mesh->GetSocketLocation("ProjectileSocket")).Rotation()};
     //Apply rotations separately
-    Control.SetRotation(FQuat::FastLerp(Control.GetRotation() , FRotator{0.0 , 0.0 , -Space.Yaw}.Quaternion() * FRotator{Space.Pitch , 0.0 , 0.0}.Quaternion() , 5.0 * InDelta));
+    Control.SetRotation(FQuat::FastLerp(Control.GetRotation() , FRotator{0.0 , 0.0 , -Space.Yaw}.Quaternion() * FRotator{Space.Pitch , 0.0 , 0.0}.Quaternion() , HeadRotationSpeed * InDelta));
     bIsHit = false;
     bIsShooting = false;
 }
@@ -68,37 +68,33 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
         DeathEffect->Activate();
         Perception->OnTargetPerceptionUpdated.RemoveDynamic(this , &AFTJ_Turret_TurretBase::OnSensed);
         SetActorTickEnabled(false);
+        Mesh->SetVisibility(false);
         GetWorld()->GetTimerManager().SetTimer
         (
             Timer
             ,
             [&]
             {
-                Mesh->SetVisibility(false);
-                GetWorld()->GetTimerManager().SetTimer
-                (
-                    Timer
-                    ,
-                    [&]
-                    {
-                        if(auto LPlayer{UGameplayStatics::GetPlayerPawn(GetWorld() , 0)} ; IsValid(LPlayer))
-                        {
-                            LPlayer->GetComponentByClass<UFTJ_ScoringSystem_Score>()->IncreaseWithText(ScoreForDestruction , 0 , FText::FromString("Turret"));
-                        }
-                        Destroy();
-                    }
-                    ,
-                    1'000'000.0 , false , 1.0
-                );
+                if(auto Pawn{UGameplayStatics::GetPlayerPawn(GetWorld() , 0)} ; IsValid(Pawn))
+                {
+                    Pawn->GetComponentByClass<UFTJ_ScoringSystem_Score>()->IncreaseWithText(ScoreForDestruction , 0 , FText::FromString("Turret"));
+                }
+                Destroy();
             }
             ,
-            1'000'000.0 , false , 1.0
+            1'000'000.0 , false , 3.0
         );
         return;
     }
     HitSound->Activate();
     HitEffect->Activate();
     bIsHit = true;
+}
+
+void AFTJ_Turret_TurretBase::EndPlay(EEndPlayReason::Type const InReason)
+{
+    GetWorld()->GetTimerManager().ClearTimer(Timer);
+    Super::EndPlay(InReason);
 }
 
 void AFTJ_Turret_TurretBase::Shoot()
@@ -111,7 +107,15 @@ void AFTJ_Turret_TurretBase::Shoot()
         [&]
         {
             //Spawn a projectile
-            GetWorld()->SpawnActor<AFTJ_Turret_ProjectileBase>(ProjectileClass , Mesh->GetSocketTransform("ProjectileSocket"))->Spawn(this);
+            GetWorld()->SpawnActor<AFTJ_Turret_ProjectileBase>
+            (
+                ProjectileClass , FTransform
+                {
+                    FQuat::MakeFromEuler({0.0 , FMath::RandRange(-ShootingMarginalError , +ShootingMarginalError) , FMath::RandRange(-ShootingMarginalError , +ShootingMarginalError)})
+                }
+                * Mesh->GetSocketTransform("ProjectileSocket")
+            )
+            ->Spawn(this);
             Shoot();
             ShootSound->Activate();
             ShootEffect->Activate();
@@ -125,7 +129,7 @@ void AFTJ_Turret_TurretBase::Shoot()
 void AFTJ_Turret_TurretBase::OnSensed(AActor * InActor , FAIStimulus InStimulus)
 {
     //Check actor correctness, it can be not a player
-    if(auto Actor{Cast<APawn>(InActor)} ; !IsValid(Actor) || !Actor->IsPlayerControlled())
+    if(auto Pawn{Cast<APawn>(InActor)} ; !IsValid(Pawn) || !Pawn->IsPlayerControlled())
     {
         return;
     }

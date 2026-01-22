@@ -54,6 +54,8 @@ UCLASS() class FTHISJOB_API AFTJ_Turret_TurretBase : public APawn , public IHitI
     //The sight radius to trigger.
     UPROPERTY(EditAnywhere) float Range;
     UPROPERTY(EditAnywhere) int32 ScoreForDestruction;
+    UPROPERTY(EditAnywhere) double HeadRotationSpeed;
+    UPROPERTY(EditAnywhere) double ShootingMarginalError;
 
     //Protected variables
     protected :
@@ -81,6 +83,7 @@ UCLASS() class FTHISJOB_API AFTJ_Turret_TurretBase : public APawn , public IHitI
         For parameters, go to IHitInterface::GetHit.
     */
     void GetHit_Implementation(float InDamage , float InStun , FVector InKnockback , float InInvincibility , AActor * InSource) override;
+    void EndPlay(EEndPlayReason::Type const InReason) override;
     //Spawns a projectile and sets up a shooting timer.
     void Shoot();
     /*
