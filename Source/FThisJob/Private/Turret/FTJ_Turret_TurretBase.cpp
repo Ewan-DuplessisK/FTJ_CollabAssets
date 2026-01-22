@@ -5,6 +5,7 @@
 #include"NiagaraComponent.h"
 #include"Components/AudioComponent.h"
 #include"Kismet/GameplayStatics.h"
+#include"Components/CapsuleComponent.h"
 
 #include"Turret/FTJ_Turret_ProjectileBase.h"
 #include"ScoringSystem/FTJ_ScoringSystem_Score.h"
@@ -15,14 +16,15 @@ void AFTJ_Turret_TurretBase::BeginPlay()
     Super::BeginPlay();
     //Set the durability to remain
     Health = HealthLimit;
+    //Cache the shape to render
+    Mesh = GetComponentByClass<USkeletalMeshComponent>();
+    Collision = GetComponentByClass<UCapsuleComponent>();
     //Cache the module to detect
     Perception = GetComponentByClass<UAIPerceptionComponent>();
     //Subscribe to detections
     Perception->OnTargetPerceptionUpdated.AddDynamic(this , &AFTJ_Turret_TurretBase::OnSensed);
     //Cache the model to sense
     Sight = Perception->GetSenseConfig<UAISenseConfig_Sight>();
-    //Cache the shape to render
-    Mesh = GetComponentByClass<USkeletalMeshComponent>();
     //Synchronize the sight radius to trigger with the perception
     SetRange(Range);
     ShowSound = Cast<UAudioComponent>(GetDefaultSubobjectByName(TEXT("ShowSound")));
@@ -69,6 +71,8 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
         Perception->OnTargetPerceptionUpdated.RemoveDynamic(this , &AFTJ_Turret_TurretBase::OnSensed);
         SetActorTickEnabled(false);
         Mesh->SetVisibility(false);
+        Collision->SetSimulatePhysics(false);
+        Collision->SetCollisionProfileName("NoCollision");
         GetWorld()->GetTimerManager().SetTimer
         (
             Timer
