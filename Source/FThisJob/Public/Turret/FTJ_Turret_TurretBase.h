@@ -38,9 +38,11 @@ UCLASS() class FTHISJOB_API AFTJ_Turret_TurretBase : public APawn , public IHitI
     UAudioComponent * HitSound;
     UAudioComponent * DeathSound;
     UAudioComponent * HideSound;
+    UNiagaraComponent * ShowEffect;
     UNiagaraComponent * ShootEffect;
     UNiagaraComponent * HitEffect;
     UNiagaraComponent * DeathEffect;
+    UNiagaraComponent * AdditionalDeathEffect;
     //The shot type to spawn.
     UPROPERTY(EditAnywhere , AdvancedDisplay) UClass * ProjectileClass;
     //The duration after popping out.

@@ -32,9 +32,11 @@ void AFTJ_Turret_TurretBase::BeginPlay()
     HitSound = Cast<UAudioComponent>(GetDefaultSubobjectByName(TEXT("HitSound")));
     DeathSound = Cast<UAudioComponent>(GetDefaultSubobjectByName(TEXT("DeathSound")));
     HideSound = Cast<UAudioComponent>(GetDefaultSubobjectByName(TEXT("HideSound")));
+    ShowEffect = Cast<UNiagaraComponent>(GetDefaultSubobjectByName(TEXT("ShowEffect")));
     ShootEffect = Cast<UNiagaraComponent>(GetDefaultSubobjectByName(TEXT("ShootEffect")));
     HitEffect = Cast<UNiagaraComponent>(GetDefaultSubobjectByName(TEXT("HitEffect")));
     DeathEffect = Cast<UNiagaraComponent>(GetDefaultSubobjectByName(TEXT("DeathEffect")));
+    AdditionalDeathEffect = Cast<UNiagaraComponent>(GetDefaultSubobjectByName(TEXT("AdditionalDeathEffect")));
     SetActorTickEnabled(false);
 }
 
@@ -68,6 +70,7 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
     {
         DeathSound->Activate();
         DeathEffect->Activate();
+        AdditionalDeathEffect->Activate();
         Perception->OnTargetPerceptionUpdated.RemoveDynamic(this , &AFTJ_Turret_TurretBase::OnSensed);
         SetActorTickEnabled(false);
         Mesh->SetVisibility(false);
@@ -79,10 +82,7 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
             ,
             [&]
             {
-                if(auto Pawn{UGameplayStatics::GetPlayerPawn(GetWorld() , 0)} ; IsValid(Pawn))
-                {
-                    Pawn->GetComponentByClass<UFTJ_ScoringSystem_Score>()->IncreaseWithText(ScoreForDestruction , 0 , FText::FromString("Turret"));
-                }
+	               UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<UFTJ_ScoringSystem_Score>()->IncreaseWithText(ScoreForDestruction , 0 , FText::FromString("Turret"));
                 Destroy();
             }
             ,
@@ -157,6 +157,7 @@ void AFTJ_Turret_TurretBase::OnSensed(AActor * InActor , FAIStimulus InStimulus)
             1'000'000.0 , false , ShowingDelay
         );
         ShowSound->Activate();
+        ShowEffect->Activate();
     }
     else
     {
