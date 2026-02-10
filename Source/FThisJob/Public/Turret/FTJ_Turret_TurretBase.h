@@ -110,6 +110,7 @@ UCLASS() class FTHISJOB_API AFTJ_Turret_TurretBase : public APawn , public IHitI
 
     //Protected functions
     protected :
+    UFUNCTION(BlueprintImplementableEvent) void OnTurretDestroyed();
 
     //Public functions
     public :
