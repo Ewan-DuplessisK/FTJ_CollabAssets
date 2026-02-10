@@ -76,6 +76,7 @@ void AFTJ_Turret_TurretBase::GetHit_Implementation(float InDamage , float InStun
         Mesh->SetVisibility(false);
         Collision->SetSimulatePhysics(false);
         Collision->SetCollisionProfileName("NoCollision");
+        OnTurretDestroyed();
         GetWorld()->GetTimerManager().SetTimer
         (
             Timer
